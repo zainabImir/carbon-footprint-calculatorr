@@ -8,6 +8,19 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+CARBON_FACTS = [
+    "A single tree absorbs up to 22 kg of CO2 per year.",
+    "The average household's carbon footprint is around 1.5 to 2 metric tons of CO2 annually.",
+    "A vegetarian diet can reduce your carbon footprint by 0.7 metric tons (700 kg) of CO2 per year.",
+    "Using public transport instead of driving can save 1.5 metric tons of CO2 annually.",
+    "Classroom projectors can emit 0.3 kg of CO2 per hour; upgrading to energy-efficient models helps reduce this.",
+    "LED bulbs use 75% less energy than traditional incandescent bulbs.",
+    "A laptop uses 85% less electricity than a desktop computer.",
+    "Recycling half of household waste can reduce emissions by 1,000 kg (1 metric ton) annually.",
+    "A roundtrip flight from Delhi to Mumbai produces 0.5 to 1 metric ton of CO2 per person.",
+    "Turning down your thermostat by 1°C can reduce energy bills by up to 10%.",
+    "The meat industry contributes 4.5% of greenhouse gas emissions."
+]
 # Custom CSS
 st.markdown("""
     <style>
@@ -181,6 +194,9 @@ def show_home_page():
     # Now center the image below the text columns
     st.markdown("<br>", unsafe_allow_html=True)  # Adding some spacing between text and image
     st.image("https://facts.net/wp-content/uploads/2023/07/20-facts-about-season-1689740634.jpg", use_container_width=True)
+import time
+import random
+import streamlit as st
 def show_calculator_page():
     st.title("📝 Carbon Footprint Calculator")
     
@@ -268,29 +284,50 @@ def show_calculator_page():
     
     # Calculate button
     if st.button("Calculate My Footprint", type="primary"):
-        # Calculate footprints
-        transportation = CarbonCalculator.calculate_transportation_footprint(
-            car_km, transit_hours, flights
-        )
+        try:
+            # Calculate footprints
+            transportation = CarbonCalculator.calculate_transportation_footprint(
+                car_km, transit_hours, flights
+            )
+            
+            home_energy = CarbonCalculator.calculate_home_energy_footprint(
+                electricity, gadgets, gas, renewable
+            )
+            
+            lifestyle = CarbonCalculator.calculate_lifestyle_footprint(
+                diet_type, recycling, composting
+            )
+            
+            # Store results in session state
+            st.session_state.results = {
+                'transportation': transportation,
+                'home_energy': home_energy,
+                'lifestyle': lifestyle,
+                'total': transportation + home_energy + lifestyle
+            }
+            # Show fact popup
+            fact = random.choice(CARBON_FACTS)
+                
+            st.markdown("""
+                <div style='background-color: #f0f9ff; border: 1px solid #bae6fd; 
+                        border-radius: 8px; padding: 20px; margin: 20px 0;'>
+                    <h3 style='color: #0369a1; margin-bottom: 10px;'>
+                        💡 Did You Know?
+                    </h3>
+                    <p style='color: #0c4a6e; font-size: 16px;'>
+                        {}
+                    </p>
+                </div>
+            """.format(fact), unsafe_allow_html=True)
+                
+            # Add a small delay before redirecting to results
+            time.sleep(2)
+            
+            # Update page state to 'results'
+            st.session_state.page = 'results'
         
-        home_energy = CarbonCalculator.calculate_home_energy_footprint(
-            electricity, gadgets, gas, renewable
-        )
-        
-        lifestyle = CarbonCalculator.calculate_lifestyle_footprint(
-            diet_type, recycling, composting
-        )
-        
-        # Store results in session state
-        st.session_state.results = {
-            'transportation': transportation,
-            'home_energy': home_energy,
-            'lifestyle': lifestyle,
-            'total': transportation + home_energy + lifestyle
-        }
-        
-        # Update page state to 'results'
-        st.session_state.page = 'results'
+        except Exception as e:
+            st.error(f"An error occurred during calculation: {str(e)}")
 def show_results_page():
     st.title("📊 Your Carbon Footprint Results")
     
